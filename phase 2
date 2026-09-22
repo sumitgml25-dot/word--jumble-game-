@@ -1,0 +1,546 @@
+import pygame
+import random
+
+pygame.init()
+
+WIDTH = 900
+HEIGHT = 650
+
+screen = pygame.display.set_mode(
+    (WIDTH, HEIGHT),
+    pygame.SCALED | pygame.FULLSCREEN
+)
+
+pygame.display.set_caption("Word Jumble Game")
+
+clock = pygame.time.Clock()
+
+# Fonts
+title_font = pygame.font.Font(None, 70)
+big_font = pygame.font.Font(None, 55)
+font = pygame.font.Font(None, 38)
+small_font = pygame.font.Font(None, 28)
+
+# Colors
+BG = (20, 25, 45)
+CARD = (35, 42, 70)
+WHITE = (255, 255, 255)
+BLUE = (80, 150, 255)
+GREEN = (70, 200, 120)
+RED = (240, 80, 90)
+YELLOW = (255, 200, 70)
+GRAY = (170, 180, 200)
+
+# Words and hints
+words = {
+    "python": "A popular programming language",
+    "computer": "An electronic machine",
+    "keyboard": "Used for typing",
+    "college": "A place where students study",
+    "internet": "A global computer network",
+    "science": "Study of the natural world",
+    "database": "Used to store organized information",
+    "program": "Instructions given to a computer",
+    "technology": "Use of scientific knowledge",
+    "education": "Process of learning"
+}
+
+# Game variables
+game_state = "menu"
+score = 0
+round_number = 0
+max_rounds = 5
+attempts = 3
+
+word = ""
+jumbled = ""
+guess = ""
+message = ""
+hint_text = ""
+hint_used = False
+
+
+def draw_text(text, font, color, center_x, y):
+    image = font.render(text, True, color)
+    rect = image.get_rect(center=(center_x, y))
+    screen.blit(image, rect)
+
+
+def draw_button(text, x, y, width, height, color):
+    pygame.draw.rect(
+        screen,
+        color,
+        (x, y, width, height),
+        border_radius=12
+    )
+    draw_text(
+        text,
+        font,
+        WHITE,
+        x + width // 2,
+        y + height // 2
+    )
+
+
+def scramble_word(word):
+    letters = list(word)
+    random.shuffle(letters)
+
+    jumbled_word = ''.join(letters)
+
+    while jumbled_word == word:
+        random.shuffle(letters)
+        jumbled_word = ''.join(letters)
+
+    return jumbled_word
+
+
+def start_new_round():
+    global word, jumbled, guess, attempts
+    global message, hint_text, hint_used, round_number
+
+    word = random.choice(list(words.keys()))
+    jumbled = scramble_word(word)
+
+    guess = ""
+    attempts = 3
+    message = ""
+    hint_text = ""
+    hint_used = False
+    round_number += 1
+
+
+def start_game():
+    global score, round_number, game_state
+
+    score = 0
+    round_number = 0
+    game_state = "game"
+    start_new_round()
+
+
+def draw_menu():
+    screen.fill(BG)
+
+    pygame.draw.circle(
+        screen,
+        (35, 55, 100),
+        (100, 100),
+        70
+    )
+
+    pygame.draw.circle(
+        screen,
+        (45, 70, 120),
+        (800, 550),
+        100
+    )
+
+    draw_text(
+        "WORD JUMBLE",
+        title_font,
+        BLUE,
+        WIDTH // 2,
+        120
+    )
+
+    draw_text(
+        "GAME",
+        title_font,
+        WHITE,
+        WIDTH // 2,
+        185
+    )
+
+    draw_text(
+        "Unscramble the word and test your vocabulary!",
+        small_font,
+        GRAY,
+        WIDTH // 2,
+        245
+    )
+
+    pygame.draw.rect(
+        screen,
+        CARD,
+        (220, 285, 460, 250),
+        border_radius=20
+    )
+
+    draw_text(
+        "How to Play",
+        big_font,
+        YELLOW,
+        WIDTH // 2,
+        330
+    )
+
+    draw_text(
+        "Guess the scrambled word",
+        small_font,
+        WHITE,
+        WIDTH // 2,
+        380
+    )
+
+    draw_text(
+        "3 attempts in each round",
+        small_font,
+        WHITE,
+        WIDTH // 2,
+        420
+    )
+
+    draw_text(
+        "Use hints when needed",
+        small_font,
+        WHITE,
+        WIDTH // 2,
+        460
+    )
+
+    draw_button(
+        "START GAME",
+        300,
+        570,
+        300,
+        55,
+        GREEN
+    )
+
+
+def draw_game():
+    screen.fill(BG)
+
+    draw_text(
+        "WORD JUMBLE",
+        big_font,
+        BLUE,
+        WIDTH // 2,
+        55
+    )
+
+    draw_text(
+        "Round " + str(round_number) + " / " + str(max_rounds),
+        small_font,
+        WHITE,
+        130,
+        55
+    )
+
+    draw_text(
+        "Score: " + str(score),
+        small_font,
+        YELLOW,
+        770,
+        55
+    )
+
+    pygame.draw.rect(
+        screen,
+        CARD,
+        (120, 100, 660, 440),
+        border_radius=25
+    )
+
+    draw_text(
+        "Unscramble this word",
+        font,
+        WHITE,
+        WIDTH // 2,
+        150
+    )
+
+    draw_text(
+        jumbled.upper(),
+        title_font,
+        BLUE,
+        WIDTH // 2,
+        220
+    )
+
+    pygame.draw.rect(
+        screen,
+        WHITE,
+        (250, 275, 400, 55),
+        border_radius=10
+    )
+
+    draw_text(
+        guess.upper(),
+        font,
+        BG,
+        WIDTH // 2,
+        302
+    )
+
+    draw_text(
+        "Attempts left: " + str(attempts),
+        small_font,
+        WHITE,
+        WIDTH // 2,
+        355
+    )
+
+    draw_button(
+        "SUBMIT",
+        230,
+        400,
+        190,
+        55,
+        GREEN
+    )
+
+    draw_button(
+        "HINT",
+        480,
+        400,
+        190,
+        55,
+        BLUE
+    )
+
+    draw_button(
+        "END GAME",
+        350,
+        480,
+        200,
+        50,
+        RED
+    )
+
+    if hint_text:
+        draw_text(
+            hint_text,
+            small_font,
+            YELLOW,
+            WIDTH // 2,
+            570
+        )
+
+    if message:
+        draw_text(
+            message,
+            small_font,
+            WHITE,
+            WIDTH // 2,
+            615
+        )
+
+
+def draw_game_over():
+    screen.fill(BG)
+
+    pygame.draw.circle(
+        screen,
+        (40, 70, 110),
+        (450, 300),
+        180
+    )
+
+    draw_text(
+        "GAME OVER",
+        title_font,
+        BLUE,
+        WIDTH // 2,
+        120
+    )
+
+    draw_text(
+        "Final Score",
+        big_font,
+        WHITE,
+        WIDTH // 2,
+        230
+    )
+
+    draw_text(
+        str(score),
+        title_font,
+        YELLOW,
+        WIDTH // 2,
+        300
+    )
+
+    draw_text(
+        "You completed " + str(round_number) + " rounds!",
+        font,
+        WHITE,
+        WIDTH // 2,
+        370
+    )
+
+    draw_button(
+        "PLAY AGAIN",
+        250,
+        470,
+        180,
+        55,
+        GREEN
+    )
+
+    draw_button(
+        "EXIT",
+        470,
+        470,
+        180,
+        55,
+        RED
+    )
+
+
+running = True
+
+while running:
+
+    if game_state == "menu":
+        draw_menu()
+
+    elif game_state == "game":
+        draw_game()
+
+    elif game_state == "gameover":
+        draw_game_over()
+
+    pygame.display.update()
+
+    for event in pygame.event.get():
+
+        if event.type == pygame.QUIT:
+            running = False
+
+        # ESC key for fullscreen exit
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                running = False
+
+        # MENU
+        if game_state == "menu":
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+
+                x, y = pygame.mouse.get_pos()
+
+                if 300 <= x <= 600 and 570 <= y <= 625:
+                    start_game()
+
+        # GAME
+        elif game_state == "game":
+
+            if event.type == pygame.KEYDOWN:
+
+                if event.key == pygame.K_BACKSPACE:
+
+                    guess = guess[:-1]
+
+                elif event.key == pygame.K_RETURN:
+
+                    if guess.lower().strip() == word:
+
+                        if hint_used:
+                            score += 5
+                        else:
+                            score += 10
+
+                        message = "Correct! Great job!"
+
+                        pygame.display.update()
+                        pygame.time.delay(800)
+
+                        if round_number >= max_rounds:
+                            game_state = "gameover"
+                        else:
+                            start_new_round()
+
+                    else:
+
+                        attempts -= 1
+
+                        if attempts > 0:
+                            message = "Wrong answer! Try again."
+
+                        else:
+                            message = "Answer: " + word
+
+                            pygame.display.update()
+                            pygame.time.delay(1200)
+
+                            if round_number >= max_rounds:
+                                game_state = "gameover"
+                            else:
+                                start_new_round()
+
+                else:
+
+                    if event.unicode.isalpha():
+                        guess += event.unicode
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+
+                x, y = pygame.mouse.get_pos()
+
+                # Submit
+                if 230 <= x <= 420 and 400 <= y <= 455:
+
+                    if guess.lower().strip() == word:
+
+                        if hint_used:
+                            score += 5
+                        else:
+                            score += 10
+
+                        message = "Correct! Great job!"
+
+                        pygame.display.update()
+                        pygame.time.delay(800)
+
+                        if round_number >= max_rounds:
+                            game_state = "gameover"
+                        else:
+                            start_new_round()
+
+                    else:
+
+                        attempts -= 1
+                        message = "Wrong answer!"
+
+                        if attempts == 0:
+
+                            message = "Answer: " + word
+
+                            pygame.display.update()
+                            pygame.time.delay(1200)
+
+                            if round_number >= max_rounds:
+                                game_state = "gameover"
+                            else:
+                                start_new_round()
+
+                # Hint
+                if 480 <= x <= 670 and 400 <= y <= 455:
+
+                    hint_text = "Hint: " + words[word]
+                    hint_used = True
+
+                # End Game
+                if 350 <= x <= 550 and 480 <= y <= 530:
+
+                    game_state = "gameover"
+
+        # GAME OVER
+        elif game_state == "gameover":
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+
+                x, y = pygame.mouse.get_pos()
+
+                # Play Again
+                if 250 <= x <= 430 and 470 <= y <= 525:
+                    start_game()
+
+                # Exit
+                if 470 <= x <= 650 and 470 <= y <= 525:
+                    running = False
+
+
+pygame.quit()
